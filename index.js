@@ -1,35 +1,39 @@
 require('dotenv').config();
 const TOKEN = process.env.TOKEN;
-const PREFIX = "!";
 const Discord = require('discord.js')
 const client = new Discord.Client({ intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'] })
 const welcomeChannelID = "931731334609666098"
+const generateImage = require('./generateImage')
 
-client.on('ready', () => {
-    console.log(`Logged In As ${client.user.tag}!`);
-});
+let bot = {
+    client,
+    prefix: "!",
+    owners: ["735782372737417276"]
+}
 
-client.on('guildMemberAdd', (member) => {
-    member.guild.channels.cache.get(welcomeChannelID).send(`<@${member.id}> Welcome To The Server!`)
+client.commands = new Discord.Collection()
+client.events = new Discord.Collection()
+
+client.loadEvents = (bot, reload) => require('./handlers/events')(bot, reload)
+client.loadCommands = (bot, reload) => require("./handlers/commands")(bot, reload)
+
+client.loadEvents(bot, false)
+client.loadCommands(bot, false)
+
+module.exports = bot
+
+//client.on('ready', () => {
+//    console.log(`Logged In As ${client.user.tag}!`);
+//});
+
+client.on('guildMemberAdd', async (member) => {
+    const img = await generateImage(member)
+    member.guild.channels.cache.get(welcomeChannelID).send({
+        content: `<@${member.id}> Welcome To The Server!`,
+        files: [img]
+    })
 })
 
-client.on('message', async (msg) => {
-    if(!msg.content.startsWith(PREFIX)) return;
 
-    const args = msg.content.slice(PREFIX.length).split(/ +/);
-    const command = args.shift().toLocaleLowerCase();
-
-    if(command === 'ping') {
-        msg.reply('pong');
-    }
-    if(command === 'membercount') {
-        msg.reply(`There Are ${msg.guild.memberCount} Member In This Server!`)
-    }
-    if(command === 'poll') {
-        let message = await msg.reply(args.join(' '));
-        await message.react('✅');
-        await message.react('❌');
-    }
-})
 
 client.login(TOKEN);
