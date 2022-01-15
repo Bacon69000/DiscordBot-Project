@@ -2,11 +2,16 @@ require('dotenv').config();
 const TOKEN = process.env.TOKEN;
 const PREFIX = "!";
 const Discord = require('discord.js')
-const client = new Discord.Client({ intents: ['GUILDS', 'GUILD_MESSAGES'] })
+const client = new Discord.Client({ intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_MEMBERS'] })
+const welcomeChannelID = "931731334609666098"
 
 client.on('ready', () => {
     console.log(`Logged In As ${client.user.tag}!`);
 });
+
+client.on('guildMemberAdd', (member) => {
+    member.guild.channels.cache.get(welcomeChannelID).send(`<@${member.id}> Welcome To The Server!`)
+})
 
 client.on('message', async (msg) => {
     if(!msg.content.startsWith(PREFIX)) return;
